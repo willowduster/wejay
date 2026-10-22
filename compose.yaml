@@ -1,0 +1,30 @@
+services:
+  studio:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+      REDIS_URL: redis://redis:6379/0
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      TURN_URL: ${TURN_URL:-}
+      TURN_USERNAME: ${TURN_USERNAME:-}
+      TURN_CREDENTIAL: ${TURN_CREDENTIAL:-}
+    volumes:
+      - accounts:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+volumes:
+  accounts:
